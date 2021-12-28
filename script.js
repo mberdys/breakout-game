@@ -19,6 +19,7 @@ let brickOffsetTop = 30;
 let brickOffsetLeft = 30;
 let score = 0;
 let lives = 3;
+let gameOver = false;
 
 let bricks = [];
 for (c=0; c<brickColumnCount; c++) {
@@ -155,7 +156,8 @@ function draw() {
             dy = -dy;
         } else {
             lives--;
-            if(!lives) {
+            if(!lives && !gameOver) {
+                gameOver = true;
                 alert('GAME OVER');
                 document.location.reload();
             } else {
