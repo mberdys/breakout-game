@@ -8,6 +8,7 @@ let ballRadius = 20;
 let paddleHeight = 10;
 let paddleWidth = 75;
 let paddleX = (canvas.width - paddleWidth)/2;
+let paddleY = (canvas.height - paddleHeight)-10;
 let rightPressed = false;
 let leftPressed = false;
 let brickRowCount = 3;
@@ -18,6 +19,7 @@ let brickPadding = 10;
 let brickOffsetTop = 30;
 let brickOffsetLeft = 50;
 let score = 0;
+let pastScore = 0;
 let lives = 3;
 let gameOver = false;
 let level = 1;
@@ -25,6 +27,12 @@ let maxLevel = 5;
 let paused = false;
 const ball = new Image();
 ball.src = 'http://pngimg.com/uploads/football/football_PNG52790.png';
+const winner = new Image();
+winner.src = 'https://i.postimg.cc/ZKN5vfzg/pexels-rodnae-productions-7005759.jpg';
+const nextLevel = new Image();
+nextLevel.src = 'https://i.postimg.cc/v85QQ0FZ/next-level.jpg';
+const gameOverImg = new Image();
+gameOverImg.src = 'https://i.postimg.cc/sDVKX747/game-over.jpg';
 
 let bricks = [];
 initBricks();
@@ -52,10 +60,10 @@ function drawBricks() {
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 ctx.closePath();
-            }            
-        }
-    }
-}
+            };            
+        };
+    };
+};
 
 function keyDownHandler(e) {
     //39 - right arrow button, 37 - left
@@ -79,12 +87,23 @@ function mouseMoveHandler(e) {
     let relativeX = e.clientX - canvas.offsetLeft;
     if(relativeX > 0 + paddleWidth/2 && relativeX < canvas.width - paddleWidth/2) {
         paddleX = relativeX - paddleWidth/2;
-    }
-}
+    };
+};
+
+function mousePauseHandler() {
+    if(!paused){
+        paused = true;
+    } else if(paused) {
+        paused = false;
+        draw();
+    };
+};
 
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
-document.addEventListener("mousemove", mouseMoveHandler);
+document.addEventListener('mousemove', mouseMoveHandler);
+document.addEventListener('keydown', mousePauseHandler);
+document.addEventListener('click', mousePauseHandler);
 
 function drawBall() {
     ctx.drawImage(ball, x, y, ballRadius, ballRadius);
@@ -92,7 +111,7 @@ function drawBall() {
 
 function drawPaddle() {
     ctx.beginPath();
-    ctx.rect(paddleX, (canvas.height-paddleHeight)-10, paddleWidth, paddleHeight);
+    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
     ctx.fillStyle = '#C29D69';
     ctx.fill();
     ctx.closePath();
@@ -103,65 +122,66 @@ function bricksCollisionDetector() {
         for (r=0; r<brickRowCount; r++) {
             let b = bricks[c][r];
             if(b.status == 1) {
-                if(x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                if(x+ballRadius > b.x && x+ballRadius < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
                     dy =- dy;
                     b.status = 0;
                     score++;
-                    if(score == brickRowCount*brickColumnCount) {
+                    if(score == pastScore + brickColumnCount*brickRowCount) {
+                        pastScore=score;
                         if(level === maxLevel) {
-                            alert("YOU WIN!");
-                            document.location.reload();
+                            paused = true;
+                            ctx.drawImage(winner, 0, 0, canvas.width, canvas.height);
+                            setTimeout(function() {
+                                paused = false;
+                                document.location.reload();
+                            }, 5000);
+                            //alert("YOU WIN!");
+                            //document.location.reload();
                         } else {
                             level++;
+                            lives++;
                             brickRowCount++;
                             initBricks();
-                            score = 0;
+                            //score = 0;
                             dx += 1;
                             dy = -dy;
                             dy -= 1;
                             x = (canvas.width/2) + Math.floor(Math.random()*21) - 10;
                             y = (canvas.height - 30) + Math.floor(Math.random()*21) - 10;
                             paddleX = (canvas.width - paddleWidth) / 2;
-                            paused = true;
                             
-                            ctx.beginPath();
-                            ctx.rect(0, 0, canvas.width, canvas.height);
-                            ctx.fillStyle = "#fff";
-                            ctx.fill();
-                            ctx.font = "16px Arial";
-                            ctx.fillStyle = "#000";
-                            ctx.fillText('Level: ' + (level - 1) + ' completed, starting next level...', 110, 150);
-
+                            paused = true;                            
+                            ctx.drawImage(nextLevel, 0, 0, canvas.width, canvas.height);
                             setTimeout(function() {
                                 paused = false;
                                 draw();
                             }, 3000);
-                        }
-                    }
-                }
-            }
+                        };
+                    };
+                };
+            };
             
-        }
-    }
+        };
+    };
 };
 
 function drawScore() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#C29D69";
     ctx.fillText("Score: " + score, 8, 20);
-}
+};
 
 function drawLives() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#C29D69";
     ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
-}
+};
 
 function drawLevel() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#C29D69";
     ctx.fillText("Level: " + level, 310, 20);
-}
+};
 
 function draw() {
     //clearRect - gives border
@@ -174,11 +194,6 @@ function draw() {
     drawLives();
     drawLevel();
 
-    //border top and x for ball
-    if(x + dx < ballRadius || x + dx > canvas.width - ballRadius) {
-        dx = -dx;
-    };
-
     //paddle controler
     if(rightPressed && paddleX < canvas.width - paddleWidth) {
         paddleX += 7;
@@ -186,24 +201,36 @@ function draw() {
         paddleX -= 7;
     };
 
-    //ball collision detection
+    //border left/right for ball
+    if(x + dx < 0 || x + dx > canvas.width - ballRadius) {
+        dx = -dx;
+    };
+
+    //ball collision detection / top border
     if(y + dy < ballRadius) {
         dy = -dy;
+        //bottom border
     } else if(y + dy > canvas.height - ballRadius) {
-        //if ball is between left&right paddle
-        if(x > paddleX && x < paddleX + paddleWidth) {
+        //if ball touches paddle
+        if(x + ballRadius > paddleX && x < paddleX + paddleWidth) {
             dy = -dy;
         } else {
             lives--;
             if(!lives && !gameOver) {
-                gameOver = true;
-                alert('GAME OVER');
-                document.location.reload();
+                paused = true;       
+                gameOver = true;         
+                ctx.drawImage(gameOverImg, 0, 0, canvas.width, canvas.height);
+                setTimeout(function() {
+                    paused = false;
+                    document.location.reload();
+                }, 3000);
+                //alert('GAME OVER');
+                //document.location.reload();
             } else {
                 x = (canvas.width/2) + Math.floor(Math.random()*21) - 10;
                 y = (canvas.height - 30) + Math.floor(Math.random()*21) - 10;
                 paddleX = (canvas.width - paddleWidth)/2;
-            }
+            };
         };
     };
 
