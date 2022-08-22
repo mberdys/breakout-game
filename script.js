@@ -16,7 +16,7 @@ let brickColumnCount = 7;
 let brickWidth = 75;
 let brickHeight = 20;
 let brickPadding = 10;
-let brickOffsetTop = 30;
+let brickOffsetTop = 35;
 let brickOffsetLeft = 50;
 let score = 0;
 let pastScore = 0;
@@ -99,11 +99,18 @@ function mousePauseHandler() {
     };
 };
 
+function enterPauseHandler(e) {
+    if(e.keyCode == 13){
+        paused = !paused;
+        draw();
+    };
+};
+
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
 document.addEventListener('mousemove', mouseMoveHandler);
-document.addEventListener('keydown', mousePauseHandler);
 document.addEventListener('click', mousePauseHandler);
+document.addEventListener('keypress', enterPauseHandler);
 
 function drawBall() {
     ctx.drawImage(ball, x, y, ballRadius, ballRadius);
@@ -112,7 +119,7 @@ function drawBall() {
 function drawPaddle() {
     ctx.beginPath();
     ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = '#C29D69';
+    ctx.fillStyle = '#fdcb6e';
     ctx.fill();
     ctx.closePath();
 };
@@ -166,20 +173,20 @@ function bricksCollisionDetector() {
 };
 
 function drawScore() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#C29D69";
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#fdcb6e";
     ctx.fillText("Score: " + score, 8, 20);
 };
 
 function drawLives() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#C29D69";
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#fdcb6e";
     ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
 };
 
 function drawLevel() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#C29D69";
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#fdcb6e";
     ctx.fillText("Level: " + level, 310, 20);
 };
 
